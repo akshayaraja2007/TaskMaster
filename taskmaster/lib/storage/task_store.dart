@@ -5,6 +5,8 @@ class TaskStore {
   static late Box<Task> _taskBox;
   static late Box<Task> _completedBox;
 
+  static Task? _lastDeleted;
+
   static Future<void> init() async {
     _taskBox = Hive.box<Task>('tasks');
     _completedBox = Hive.box<Task>('completed');
@@ -22,7 +24,15 @@ class TaskStore {
   }
 
   static void deleteTask(Task task) {
+    _lastDeleted = task;
     _taskBox.delete(task.id);
+  }
+
+  static void undoDelete() {
+    if (_lastDeleted != null) {
+      _taskBox.put(_lastDeleted!.id, _lastDeleted!);
+      _lastDeleted = null;
+    }
   }
 
   static void markCompleted(Task task) {
